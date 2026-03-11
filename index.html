@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Actividad · Selenium WebDriver</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0c0f1a;
+    --surface: #141829;
+    --surface2: #1a1f35;
+    --border: #2a3050;
+    --green: #4ade80;
+    --green-dim: rgba(74, 222, 128, 0.12);
+    --green-glow: rgba(74, 222, 128, 0.25);
+    --red: #f87171;
+    --red-dim: rgba(248, 113, 113, 0.12);
+    --amber: #fbbf24;
+    --amber-dim: rgba(251, 191, 36, 0.1);
+    --cyan: #22d3ee;
+    --cyan-dim: rgba(34, 211, 238, 0.08);
+    --text: #e2e8f0;
+    --text-dim: #94a3b8;
+    --text-muted: #64748b;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background grid effect */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(74, 222, 128, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(74, 222, 128, 0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 1.25rem 4rem;
+  }
+
+  /* ─── Header ─── */
+  .header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+    animation: fadeUp 0.6s ease-out;
+  }
+
+  .badge {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--green);
+    background: var(--green-dim);
+    border: 1px solid rgba(74, 222, 128, 0.2);
+    padding: 0.35rem 0.9rem;
+    border-radius: 100px;
+    margin-bottom: 1.2rem;
+  }
+
+  .header h1 {
+    font-family: var(--mono);
+    font-size: clamp(1.5rem, 5vw, 2.2rem);
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 0.6rem;
+    background: linear-gradient(135deg, #e2e8f0, #4ade80);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .header p {
+    color: var(--text-dim);
+    font-size: 0.95rem;
+    max-width: 520px;
+    margin: 0 auto;
+    line-height: 1.6;
+  }
+
+  /* ─── Scenario Card ─── */
+  .scenario {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 2rem;
+    animation: fadeUp 0.6s ease-out 0.1s both;
+  }
+
+  .scenario-label {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--cyan);
+    margin-bottom: 0.5rem;
+  }
+
+  .scenario-text {
+    font-size: 0.95rem;
+    color: var(--text);
+    line-height: 1.6;
+  }
+
+  .scenario-text strong {
+    color: var(--green);
+    font-weight: 600;
+  }
+
+  /* ─── Command Bank ─── */
+  .bank-section {
+    margin-bottom: 2rem;
+    animation: fadeUp 0.6s ease-out 0.2s both;
+  }
+
+  .section-title {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 0.75rem;
+  }
+
+  .bank {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    min-height: 48px;
+    padding: 0.75rem;
+    background: var(--surface);
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+  }
+
+  .chip {
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 0.45rem 0.85rem;
+    border-radius: 8px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--amber);
+    cursor: grab;
+    user-select: none;
+    transition: all 0.2s;
+    white-space: nowrap;
+    -webkit-user-select: none;
+    touch-action: none;
+  }
+
+  .chip:active { cursor: grabbing; }
+  .chip:hover { border-color: var(--amber); background: var(--amber-dim); }
+
+  .chip.dragging {
+    opacity: 0.4;
+    transform: scale(0.95);
+  }
+
+  .chip.correct {
+    background: var(--green-dim);
+    border-color: var(--green);
+    color: var(--green);
+    cursor: default;
+  }
+
+  .chip.incorrect {
+    background: var(--red-dim);
+    border-color: var(--red);
+    color: var(--red);
+    animation: shake 0.4s ease-out;
+  }
+
+  /* ─── Steps ─── */
+  .steps {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    animation: fadeUp 0.6s ease-out 0.3s both;
+  }
+
+  .step {
+    display: grid;
+    grid-template-columns: 38px 1fr;
+    gap: 0.85rem;
+    align-items: start;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1rem 1.2rem;
+    transition: border-color 0.3s, box-shadow 0.3s;
+  }
+
+  .step.completed {
+    border-color: rgba(74, 222, 128, 0.3);
+    box-shadow: 0 0 20px rgba(74, 222, 128, 0.05);
+  }
+
+  .step-num {
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    flex-shrink: 0;
+    transition: all 0.3s;
+  }
+
+  .step.completed .step-num {
+    background: var(--green-dim);
+    border-color: var(--green);
+    color: var(--green);
+  }
+
+  .step-content { min-width: 0; }
+
+  .step-desc {
+    font-size: 0.9rem;
+    color: var(--text);
+    margin-bottom: 0.65rem;
+    line-height: 1.5;
+  }
+
+  .drop-zone {
+    min-height: 42px;
+    padding: 0.5rem 0.75rem;
+    border: 1.5px dashed var(--border);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    transition: all 0.2s;
+    position: relative;
+  }
+
+  .drop-zone::before {
+    content: attr(data-placeholder);
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    pointer-events: none;
+  }
+
+  .drop-zone.has-chip::before { display: none; }
+
+  .drop-zone.drag-over {
+    border-color: var(--amber);
+    background: var(--amber-dim);
+    box-shadow: inset 0 0 15px rgba(251, 191, 36, 0.05);
+  }
+
+  .drop-zone.correct-zone {
+    border-color: var(--green);
+    border-style: solid;
+    background: var(--green-dim);
+  }
+
+  .drop-zone.incorrect-zone {
+    border-color: var(--red);
+    border-style: solid;
+    background: var(--red-dim);
+  }
+
+  .drop-zone .chip { cursor: pointer; }
+  .drop-zone .chip:hover { opacity: 0.8; }
+
+  /* ─── Feedback area ─── */
+  .feedback {
+    display: none;
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    margin-top: 0.35rem;
+    padding: 0.3rem 0.6rem;
+    border-radius: 6px;
+  }
+
+  .feedback.show { display: inline-block; }
+  .feedback.success { color: var(--green); background: var(--green-dim); }
+  .feedback.error { color: var(--red); background: var(--red-dim); }
+
+  /* ─── Bottom controls ─── */
+  .controls {
+    margin-top: 2rem;
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    animation: fadeUp 0.6s ease-out 0.4s both;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 0.7rem 1.6rem;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-check {
+    background: var(--green-dim);
+    border-color: rgba(74, 222, 128, 0.3);
+    color: var(--green);
+  }
+  .btn-check:hover { background: var(--green-glow); border-color: var(--green); }
+
+  .btn-reset {
+    background: var(--surface);
+    color: var(--text-dim);
+  }
+  .btn-reset:hover { background: var(--surface2); border-color: var(--text-dim); }
+
+  /* ─── Result Banner ─── */
+  .result-banner {
+    display: none;
+    text-align: center;
+    margin-top: 1.5rem;
+    padding: 1.2rem;
+    border-radius: 12px;
+    font-family: var(--mono);
+    animation: fadeUp 0.4s ease-out;
+  }
+
+  .result-banner.show { display: block; }
+
+  .result-banner.perfect {
+    background: var(--green-dim);
+    border: 1px solid rgba(74, 222, 128, 0.3);
+    color: var(--green);
+  }
+
+  .result-banner.partial {
+    background: var(--amber-dim);
+    border: 1px solid rgba(251, 191, 36, 0.3);
+    color: var(--amber);
+  }
+
+  .result-score {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+  }
+
+  .result-msg { font-size: 0.85rem; }
+
+  /* ─── Animations ─── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-4px); }
+    40% { transform: translateX(4px); }
+    60% { transform: translateX(-3px); }
+    80% { transform: translateX(2px); }
+  }
+
+  /* ─── Mobile ─── */
+  @media (max-width: 520px) {
+    .container { padding: 1.25rem 0.75rem 3rem; }
+    .step { grid-template-columns: 32px 1fr; gap: 0.65rem; padding: 0.85rem 1rem; }
+    .step-num { width: 32px; height: 32px; font-size: 0.75rem; }
+    .chip { font-size: 0.72rem; padding: 0.4rem 0.7rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header class="header">
+    <div class="badge">Equipo 3 · Pruebas de Software</div>
+    <h1>Selenium WebDriver</h1>
+    <p>Arrastra el comando correcto a cada paso del escenario. También puedes tocar un comando y luego tocar la zona destino.</p>
+  </header>
+
+  <div class="scenario">
+    <div class="scenario-label">📋 Escenario</div>
+    <div class="scenario-text">
+      Automatizar el proceso de <strong>inicio de sesión</strong> en una tienda en línea: abrir el sitio, hacer clic en "Iniciar Sesión", llenar credenciales y verificar acceso exitoso.
+    </div>
+  </div>
+
+  <div class="bank-section">
+    <div class="section-title">Banco de Comandos — arrastra o toca</div>
+    <div class="bank" id="bank"></div>
+  </div>
+
+  <div class="section-title">Pasos del Escenario</div>
+  <div class="steps" id="steps"></div>
+
+  <div class="controls">
+    <button class="btn btn-check" id="btnCheck">▶ Verificar</button>
+    <button class="btn btn-reset" id="btnReset">↺ Reiniciar</button>
+  </div>
+
+  <div class="result-banner" id="result">
+    <div class="result-score" id="resultScore"></div>
+    <div class="result-msg" id="resultMsg"></div>
+  </div>
+</div>
+
+<script>
+// ─── Data ───
+const STEPS = [
+  {
+    id: 1,
+    desc: 'Abrir el navegador y navegar a <code>https://tienda.com</code>',
+    answer: 'driver.get("https://tienda.com")',
+    hint: 'Navega a la URL indicada'
+  },
+  {
+    id: 2,
+    desc: 'Hacer clic en el botón <strong>"Iniciar Sesión"</strong>',
+    answer: 'find_element(By.ID, "login").click()',
+    hint: 'Localiza el botón y simula un clic'
+  },
+  {
+    id: 3,
+    desc: 'Escribir el correo en el campo de <strong>usuario</strong>',
+    answer: 'find_element(By.NAME, "email").send_keys("user@mail.com")',
+    hint: 'Localiza el campo y escribe texto'
+  },
+  {
+    id: 4,
+    desc: 'Escribir la contraseña en el campo <strong>password</strong>',
+    answer: 'find_element(By.NAME, "password").send_keys("pass123")',
+    hint: 'Localiza el campo password y escribe'
+  },
+  {
+    id: 5,
+    desc: 'Hacer clic en el botón <strong>"Entrar"</strong>',
+    answer: 'find_element(By.CSS_SELECTOR, ".btn-submit").click()',
+    hint: 'Localiza y haz clic para enviar'
+  },
+  {
+    id: 6,
+    desc: 'Verificar que el título de la página contiene <strong>"Mi Cuenta"</strong>',
+    answer: 'assert "Mi Cuenta" in driver.title',
+    hint: 'Valida el resultado de la prueba'
+  }
+];
+
+// Distractors
+const DISTRACTORS = [
+  'driver.close()',
+  'driver.back()',
+];
+
+// ─── State ───
+let selectedChip = null;
+let completed = {};
+
+// ─── Build UI ───
+function buildBank() {
+  const bank = document.getElementById('bank');
+  bank.innerHTML = '';
+  const allCommands = [...STEPS.map(s => s.answer), ...DISTRACTORS];
+  shuffle(allCommands);
+  allCommands.forEach(cmd => {
+    const chip = createChip(cmd);
+    bank.appendChild(chip);
+  });
+}
+
+function buildSteps() {
+  const container = document.getElementById('steps');
+  container.innerHTML = '';
+  STEPS.forEach(step => {
+    const el = document.createElement('div');
+    el.className = 'step';
+    el.dataset.stepId = step.id;
+    el.innerHTML = `
+      <div class="step-num">${step.id}</div>
+      <div class="step-content">
+        <div class="step-desc">${step.desc}</div>
+        <div class="drop-zone" data-step="${step.id}" data-placeholder="Suelta el comando aquí..."></div>
+        <div class="feedback" id="fb-${step.id}"></div>
+      </div>
+    `;
+    container.appendChild(el);
+  });
+
+  // Setup drop zones
+  document.querySelectorAll('.drop-zone').forEach(zone => {
+    zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+    zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+    zone.addEventListener('drop', e => {
+      e.preventDefault();
+      zone.classList.remove('drag-over');
+      const cmd = e.dataTransfer.getData('text/plain');
+      placeChip(cmd, zone);
+    });
+    zone.addEventListener('click', () => {
+      if (selectedChip && !zone.classList.contains('correct-zone')) {
+        placeChip(selectedChip.dataset.cmd, zone);
+        selectedChip.classList.remove('selected');
+        selectedChip = null;
+      }
+    });
+  });
+}
+
+function createChip(cmd) {
+  const chip = document.createElement('div');
+  chip.className = 'chip';
+  chip.textContent = cmd;
+  chip.draggable = true;
+  chip.dataset.cmd = cmd;
+
+  chip.addEventListener('dragstart', e => {
+    e.dataTransfer.setData('text/plain', cmd);
+    chip.classList.add('dragging');
+    setTimeout(() => chip.style.display = '', 0);
+  });
+  chip.addEventListener('dragend', () => chip.classList.remove('dragging'));
+
+  // Tap-to-select for mobile
+  chip.addEventListener('click', (e) => {
+    e.stopPropagation();
+    // If chip is inside a drop zone, return it to bank
+    if (chip.parentElement.classList.contains('drop-zone')) {
+      returnChipToBank(chip);
+      return;
+    }
+    // Toggle selection
+    if (selectedChip === chip) {
+      chip.style.outline = '';
+      selectedChip = null;
+    } else {
+      if (selectedChip) selectedChip.style.outline = '';
+      chip.style.outline = '2px solid var(--amber)';
+      selectedChip = chip;
+    }
+  });
+
+  return chip;
+}
+
+function placeChip(cmd, zone) {
+  // Return existing chip in zone to bank
+  const existing = zone.querySelector('.chip');
+  if (existing) returnChipToBank(existing);
+
+  // Find chip in bank
+  const bank = document.getElementById('bank');
+  const chip = [...bank.querySelectorAll('.chip')].find(c => c.dataset.cmd === cmd);
+  if (!chip) return;
+
+  zone.appendChild(chip);
+  zone.classList.add('has-chip');
+  chip.style.outline = '';
+
+  // Clear previous feedback
+  const stepId = zone.dataset.step;
+  const fb = document.getElementById('fb-' + stepId);
+  fb.className = 'feedback';
+  zone.classList.remove('correct-zone', 'incorrect-zone');
+  chip.classList.remove('correct', 'incorrect');
+  const stepEl = zone.closest('.step');
+  stepEl.classList.remove('completed');
+  delete completed[stepId];
+}
+
+function returnChipToBank(chip) {
+  const zone = chip.parentElement;
+  const bank = document.getElementById('bank');
+  bank.appendChild(chip);
+  chip.classList.remove('correct', 'incorrect');
+  chip.style.outline = '';
+  if (zone.classList.contains('drop-zone')) {
+    zone.classList.remove('has-chip', 'correct-zone', 'incorrect-zone');
+    const stepId = zone.dataset.step;
+    const fb = document.getElementById('fb-' + stepId);
+    fb.className = 'feedback';
+    zone.closest('.step').classList.remove('completed');
+    delete completed[stepId];
+  }
+}
+
+// ─── Check answers ───
+document.getElementById('btnCheck').addEventListener('click', () => {
+  let score = 0;
+
+  STEPS.forEach(step => {
+    const zone = document.querySelector(`.drop-zone[data-step="${step.id}"]`);
+    const chip = zone.querySelector('.chip');
+    const fb = document.getElementById('fb-' + step.id);
+    const stepEl = zone.closest('.step');
+
+    if (!chip) {
+      fb.textContent = '⚠ Arrastra un comando aquí';
+      fb.className = 'feedback show error';
+      zone.classList.remove('correct-zone', 'incorrect-zone');
+      stepEl.classList.remove('completed');
+      return;
+    }
+
+    if (chip.dataset.cmd === step.answer) {
+      chip.classList.add('correct');
+      chip.classList.remove('incorrect');
+      zone.classList.add('correct-zone');
+      zone.classList.remove('incorrect-zone');
+      fb.textContent = '✓ Correcto — ' + step.hint;
+      fb.className = 'feedback show success';
+      stepEl.classList.add('completed');
+      completed[step.id] = true;
+      score++;
+    } else {
+      chip.classList.add('incorrect');
+      chip.classList.remove('correct');
+      zone.classList.add('incorrect-zone');
+      zone.classList.remove('correct-zone');
+      fb.textContent = '✗ Incorrecto — intenta de nuevo';
+      fb.className = 'feedback show error';
+      stepEl.classList.remove('completed');
+      delete completed[step.id];
+    }
+  });
+
+  // Show result
+  const result = document.getElementById('result');
+  const scoreEl = document.getElementById('resultScore');
+  const msgEl = document.getElementById('resultMsg');
+  scoreEl.textContent = `${score} / ${STEPS.length}`;
+
+  if (score === STEPS.length) {
+    result.className = 'result-banner show perfect';
+    msgEl.textContent = '¡Perfecto! Dominaste los comandos de WebDriver 🎉';
+  } else {
+    result.className = 'result-banner show partial';
+    msgEl.textContent = `Revisa los pasos marcados en rojo e intenta de nuevo`;
+  }
+});
+
+document.getElementById('btnReset').addEventListener('click', () => {
+  completed = {};
+  selectedChip = null;
+  document.getElementById('result').className = 'result-banner';
+  buildBank();
+  buildSteps();
+});
+
+// ─── Util ───
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+}
+
+// ─── Init ───
+buildBank();
+buildSteps();
+</script>
+</body>
+</html>
