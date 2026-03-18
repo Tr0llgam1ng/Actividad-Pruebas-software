@@ -601,7 +601,7 @@ function loadChallenge(index) {
   const ch = challenges[index];
   challengeBadge.textContent = `Reto ${ch.id} / ${challenges.length}`;
   addLine(ch.instruction, 'instruction');
-  addLine('💡 Pista: ' + ch.hint, 'hint');
+  //addLine('💡 Pista: ' + ch.hint, 'hint');
 }
 
 function addLine(text, cls = '') {
